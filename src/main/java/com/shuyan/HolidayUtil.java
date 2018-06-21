@@ -34,7 +34,6 @@ public class HolidayUtil {
             JSONArray jsonArray = jsonObject.getJSONArray("data").getJSONObject(0).getJSONArray("holiday");
 
             List<JSONObject> retList = new ArrayList<>();
-            List<String> keyList = new ArrayList<>();
 
             for(int i=0; i<jsonArray.size(); i++){
                 JSONArray list = jsonArray.getJSONObject(i).getJSONArray("list");
