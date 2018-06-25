@@ -22,6 +22,7 @@ public class HolidayUtil {
     private static final String  baiduApiUrl = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=%s&resource_id=6018";
     private static final OkHttpClient client = new OkHttpClient();
 
+    //从百度API中获取1个月的节假日
     public static List<JSONObject> getHoliday(Date date){
         String query = new SimpleDateFormat("yyyy年MM月").format(date);
         Calendar cal = Calendar.getInstance();
@@ -59,6 +60,7 @@ public class HolidayUtil {
         }
     }
 
+    //将节假日和周末进行整合，得到本月中所有需要放假的日期
     public static List<String> getWeekday(Date date) throws ParseException {
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
@@ -94,6 +96,7 @@ public class HolidayUtil {
         return weekList;
     }
 
+    //忽略时分秒比较日期是否相等
     private static boolean sameDate(Date d1, Date d2) {
         LocalDate localDate1 = ZonedDateTime.ofInstant(d1.toInstant(), ZoneId.systemDefault()).toLocalDate();
         LocalDate localDate2 = ZonedDateTime.ofInstant(d2.toInstant(), ZoneId.systemDefault()).toLocalDate();
