@@ -19,43 +19,62 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 public class HolidayUtil {
-    private static final String  baiduApiUrl = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=%s&resource_id=6018";
+    private static final String baiduApiUrl = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=%s&resource_id=6018";
     private static final OkHttpClient client = new OkHttpClient();
 
     //从百度API中获取1个月的节假日
-    public static List<JSONObject> getHoliday(Date date){
+    public static List<JSONObject> getHoliday(Date date) {
         String query = new SimpleDateFormat("yyyy年MM月").format(date);
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
-        int paramMonth = cal.get(Calendar.MONTH)+1;
+        int paramMonth = cal.get(Calendar.MONTH) + 1;
         String url = String.format(baiduApiUrl, query);
 
         Request request = new Request.Builder()
                 .url(url)
                 .build();
-        try{
+        try {
             Response response = client.newCall(request).execute();
             if ((!response.isSuccessful()) || (response.body() == null)) {
                 return null;
             }
             JSONObject jsonObject = JSON.parseObject(response.body().string());
-            JSONArray jsonArray = jsonObject.getJSONArray("data").getJSONObject(0).getJSONArray("holiday");
+            JSONObject data = jsonObject.getJSONArray("data").getJSONObject(0);
+            List<JSONObject> jsonObjectList = new ArrayList<>();
+
+            try {
+                JSONObject obj;
+                if ((obj = data.getJSONObject("holiday")) != null) {
+                    jsonObjectList.add(obj);
+                }
+            } catch (ClassCastException ignored) {
+
+            }
+
+            try {
+                JSONArray jsonArr;
+                if ((jsonArr = data.getJSONArray("holiday")) != null) {
+                    jsonObjectList = jsonArr.toJavaList(JSONObject.class);
+                }
+            } catch (ClassCastException ignored) {
+
+            }
 
             List<JSONObject> holidayList = new ArrayList<>();
 
-            for(int i=0; i<jsonArray.size(); i++){
-                JSONArray list = jsonArray.getJSONObject(i).getJSONArray("list");
-                for(int j=0; j<list.size(); j++){
+            for (JSONObject aJsonObjectList : jsonObjectList) {
+                JSONArray list = aJsonObjectList.getJSONArray("list");
+                for (int j = 0; j < list.size(); j++) {
                     JSONObject listObj = list.getJSONObject(j);
                     String s = listObj.getString("date");
                     int baiduMonth = Integer.parseInt(s.split("-")[1]);
-                    if((!holidayList.contains(listObj) && (baiduMonth == paramMonth))){
+                    if ((!holidayList.contains(listObj) && (baiduMonth == paramMonth))) {
                         holidayList.add(listObj);
                     }
                 }
             }
             return holidayList;
-        }catch (IOException e){
+        } catch (IOException e) {
             return null;
         }
     }
@@ -65,28 +84,28 @@ public class HolidayUtil {
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
         cal.set(Calendar.DATE, 1);
-        int paramMonth = cal.get(Calendar.MONTH)+1;
+        int paramMonth = cal.get(Calendar.MONTH) + 1;
 
         List<JSONObject> holidayList = getHoliday(date);
-        if(holidayList == null)
+        if (holidayList == null)
             return null;
         List<String> weekList = new ArrayList<>();
-        while((cal.get(Calendar.MONTH)+1) == paramMonth){
+        while ((cal.get(Calendar.MONTH) + 1) == paramMonth) {
             int day = cal.get(Calendar.DAY_OF_WEEK);
-            if(day == Calendar.SUNDAY || day == Calendar.SATURDAY){
+            if (day == Calendar.SUNDAY || day == Calendar.SATURDAY) {
                 boolean flag = true;
-                for(JSONObject obj:holidayList){
+                for (JSONObject obj : holidayList) {
                     DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    if(sameDate(format.parse(obj.getString("date")),cal.getTime()) && obj.getInteger("status").equals(2)){
+                    if (sameDate(format.parse(obj.getString("date")), cal.getTime()) && obj.getInteger("status").equals(2)) {
                         flag = false;
                     }
                 }
-                if(flag)
+                if (flag)
                     weekList.add(new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime()));
-            }else{
-                for(JSONObject obj:holidayList){
+            } else {
+                for (JSONObject obj : holidayList) {
                     DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    if(sameDate(format.parse(obj.getString("date")),cal.getTime()) && obj.getInteger("status").equals(1)){
+                    if (sameDate(format.parse(obj.getString("date")), cal.getTime()) && obj.getInteger("status").equals(1)) {
                         weekList.add(new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime()));
                     }
                 }
